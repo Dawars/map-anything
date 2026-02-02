@@ -11,6 +11,7 @@ with scene-adaptive voxel downsampling and efficient backprojection for Point2D 
 """
 
 import os
+from pathlib import Path
 
 import numpy as np
 import trimesh
@@ -339,13 +340,25 @@ def build_colmap_reconstruction(
             ext[:3, 3],
         )
 
+        # For simplicity, use rig_id == camera_id and frame_id == image_id for single-camera rigs.        
+        
+        rig = pycolmap.Rig(rig_id=camera.camera_id)
+        rig.add_ref_sensor(camera.sensor_id)  # The reference sensor has identity transform to the rig.
+        reconstruction.add_rig(rig)
+
         image = pycolmap.Image(
-            id=frame_idx + 1,
+            image_id=frame_idx + 1,
+            frame_id=frame_idx + 1,
             name=image_names[frame_idx],
             camera_id=camera.camera_id,
-            cam_from_world=cam_from_world,
         )
+        # Use rig_from_world == cam_from_world since the image is the reference sensor.
+        # Alternatively, set the pose later via reconstruction.frame(frame_id).set_cam_from_world
+        frame = pycolmap.Frame(frame_id=image.frame_id, rig_id=rig.rig_id, rig_from_world=cam_from_world)
+        frame.add_data_id(image.data_id)  # Add the image to the frame.
 
+        reconstruction.add_frame(frame)
+        
         # Build Point2D list and update tracks
         points2d_list = []
         frame_observations = observations_per_frame[frame_idx]
@@ -361,13 +374,13 @@ def build_colmap_reconstruction(
         # Set points2D on image
         if points2d_list:
             try:
-                image.points2D = pycolmap.ListPoint2D(points2d_list)
-                image.registered = True
+                image.points2D = pycolmap.Point2DList(points2d_list)
+                # image.has_pose = True
             except Exception as e:
                 print(f"Warning: Failed to set points2D for frame {frame_idx}: {e}")
-                image.registered = False
-        else:
-            image.registered = True  # Still registered, just no observations
+                # image.has_pose = False
+        # else:
+        #     image.has_pose = True  # Still registered, just no observations
 
         reconstruction.add_image(image)
 
@@ -513,7 +526,8 @@ def export_predictions_to_colmap(
             img_pil = Image.fromarray(img_uint8)
 
             # Save with original image name
-            img_path = os.path.join(images_dir, image_names[i])
+            img_path = Path(images_dir, image_names[i])
+            img_path.parent.mkdir(parents=True, exist_ok=True)
             img_pil.save(img_path, quality=95)
 
         print(f"Saved {num_frames} processed images to: {images_dir}")
