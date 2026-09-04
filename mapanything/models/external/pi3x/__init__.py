@@ -8,8 +8,9 @@ Inference wrapper for Pi3X
 """
 
 import torch
-from pi3.models.pi3x import Pi3X
 
+from mapanything.utils.device import get_device, get_amp_dtype
+from mapanything.models.external.pi3.models.pi3x import Pi3X
 from mapanything.models.external.vggt.utils.rotation import mat_to_quat
 
 
@@ -37,13 +38,10 @@ class Pi3XWrapper(torch.nn.Module):
             # Initialize the Pi3X model
             self.model = Pi3X.from_pretrained("yyfz233/Pi3X", force_download=True)
 
-        # Get the dtype for Pi3X inference
+        self.device = get_device()
+        # Get the dtype for Pi3 inference
         # bfloat16 is supported on Ampere GPUs (Compute Capability 8.0+)
-        self.dtype = (
-            torch.bfloat16
-            if torch.cuda.get_device_capability()[0] >= 8
-            else torch.float16
-        )
+        self.dtype = get_amp_dtype(self.device)
 
     def forward(self, views):
         """

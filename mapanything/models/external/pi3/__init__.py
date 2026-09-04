@@ -11,6 +11,7 @@ import torch
 
 from mapanything.models.external.pi3.models.pi3 import Pi3
 from mapanything.models.external.vggt.utils.rotation import mat_to_quat
+from mapanything.utils.device import get_autocast_device_type, get_device, get_amp_dtype
 
 
 class Pi3Wrapper(torch.nn.Module):
@@ -43,14 +44,10 @@ class Pi3Wrapper(torch.nn.Module):
                 pos_type=pos_type,
                 decoder_size=decoder_size,
             )
-
+        self.device = get_device()
         # Get the dtype for Pi3 inference
         # bfloat16 is supported on Ampere GPUs (Compute Capability 8.0+)
-        self.dtype = (
-            torch.bfloat16
-            if torch.cuda.get_device_capability()[0] >= 8
-            else torch.float16
-        )
+        self.dtype = get_amp_dtype(self.device)
 
     def forward(self, views):
         """
@@ -84,11 +81,11 @@ class Pi3Wrapper(torch.nn.Module):
         images = torch.stack(img_list, dim=1)
 
         # Run the Pi3 aggregator
-        with torch.autocast("cuda", dtype=self.dtype):
+        with torch.autocast(get_autocast_device_type(self.device), dtype=self.dtype):
             results = self.model(images)
 
         # Need high precision for transformations
-        with torch.autocast("cuda", enabled=False):
+        with torch.autocast(get_autocast_device_type(self.device), enabled=False):
             # Convert the output to MapAnything format
             res = []
             for view_idx in range(num_views):
