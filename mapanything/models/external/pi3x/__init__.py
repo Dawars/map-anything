@@ -9,7 +9,7 @@ Inference wrapper for Pi3X
 
 import torch
 
-from mapanything.utils.device import get_device, get_amp_dtype
+from mapanything.utils.device import get_autocast_device_type, get_device, get_amp_dtype
 from mapanything.models.external.pi3.models.pi3x import Pi3X
 from mapanything.models.external.vggt.utils.rotation import mat_to_quat
 
@@ -104,14 +104,14 @@ class Pi3XWrapper(torch.nn.Module):
                 conditions["poses"] = poses
 
         # Run the Pi3X aggregator
-        with torch.autocast("cuda", dtype=self.dtype):
+        with torch.autocast(get_autocast_device_type(self.device), dtype=self.dtype):
             results = self.model(
                 imgs=images,
                 **conditions,
             )
 
         # Need high precision for transformations
-        with torch.autocast("cuda", enabled=False):
+        with torch.autocast(get_autocast_device_type(self.device), enabled=False):
             # Convert the output to MapAnything format
             res = []
             for view_idx in range(num_views):

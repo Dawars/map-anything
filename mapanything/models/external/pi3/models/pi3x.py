@@ -8,9 +8,8 @@ from huggingface_hub import PyTorchModelHubMixin
 from mapanything.models.external.pi3.layers.block import PoseInjectBlock
 from mapanything.models.external.pi3.layers.conv_head import ConvHead
 from mapanything.models.external.pi3.layers.transformer_head import ContextOnlyTransformerDecoder
-from dinov2.layers import PatchEmbed
 from mapanything.models.external.dinov2.hub.backbones import dinov2_vitl14_reg
-from mapanything.models.external.dinov2.layers import Mlp
+from mapanything.models.external.dinov2.layers import Mlp, PatchEmbed
 from mapanything.models.external.pi3.layers.attention import FlashAttentionRope
 from mapanything.models.external.pi3.layers.block import BlockRope
 from mapanything.models.external.pi3.layers.camera_head import CameraHead
@@ -19,7 +18,7 @@ from mapanything.models.external.pi3.layers.transformer_head import (
     LinearPts3d,
     TransformerDecoder,
 )
-from utils.geometry import get_pixel, se3_inverse, homogenize_points
+from ..utils.geometry import get_pixel, se3_inverse, homogenize_points
 
 
 class Pi3X(nn.Module, PyTorchModelHubMixin):
@@ -314,7 +313,7 @@ class Pi3X(nn.Module, PyTorchModelHubMixin):
                         p_ray = 0.0
                         rays = torch.zeros((B, N, H, W, 2), device=imgs.device)
                     else:
-                        pix = torch.from_numpy(get_pixel(H, W).T.reshape(H, W, 3)).to(device).float()[None].repeat(B, 1, 1, 1)
+                        pix = torch.from_numpy(get_pixel(H, W).T.reshape(H, W, 3).astype("float32")).to(device)[None].repeat(B, 1, 1, 1)
                         rays = torch.einsum('bnij, bhwj -> bnhwi', torch.inverse(intrinsics), pix)[..., :2]
                         # rays = F.normalize(rays, dim=-1).reshape(B, N, H, W, 3)                   # don't normalize, so the pred['xy'] is the same as input rays
 

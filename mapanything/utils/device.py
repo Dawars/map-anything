@@ -130,7 +130,7 @@ def get_device_capabilities(device):
     if device_type == "cuda":
         capabilities["bf16_supported"] = torch.cuda.is_bf16_supported()
     elif device_type == "mps":
-        capabilities["bf16_supported"] = False
+        capabilities["bf16_supported"] = True
     else:
         capabilities["bf16_supported"] = False
 
