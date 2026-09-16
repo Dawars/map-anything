@@ -130,7 +130,7 @@ def get_device_capabilities(device):
     if device_type == "cuda":
         capabilities["bf16_supported"] = torch.cuda.is_bf16_supported()
     elif device_type == "mps":
-        capabilities["bf16_supported"] = True
+        capabilities["bf16_supported"] = False
     else:
         capabilities["bf16_supported"] = False
 
@@ -165,6 +165,22 @@ def empty_cache(device=None):
         torch.cuda.empty_cache()
     elif device_type == "mps" and hasattr(torch, "mps"):
         torch.mps.empty_cache()
+
+def synchronize(device=None):
+    """Synchronize if backend supports it.
+
+    Args:
+        device: torch.device to clear cache for. If None, uses auto-detected device.
+    """
+    if device is None:
+        device = get_device()
+
+    device_type = device.type if hasattr(device, "type") else str(device).split(":")[0]
+
+    if device_type == "cuda" and torch.cuda.is_available():
+        torch.cuda.synchronize()
+    elif device_type == "mps" and hasattr(torch, "mps"):
+        torch.mps.synchronize()
 
 
 def get_amp_dtype(device, requested_dtype="bf16"):

@@ -9,6 +9,7 @@ from pathlib import Path
 
 import torch
 
+from mapanything.utils.device import get_autocast_device_type, get_device, get_amp_dtype
 from mapanything.utils.geometry import (
     convert_ray_dirs_depth_along_ray_pose_trans_quats_to_pointmap,
     convert_z_depth_to_depth_along_ray,
@@ -63,6 +64,10 @@ class VGGTOmegaWrapper(torch.nn.Module):
         state_dict = checkpoint.get("model", checkpoint.get("state_dict", checkpoint))
         print(self.model.load_state_dict(state_dict, strict=True))
 
+
+        self.device = get_device()
+        self.dtype = get_amp_dtype(self.device)
+
     def forward(self, views):
         """Forward pass wrapper for VGGT-Omega.
 
@@ -83,7 +88,10 @@ class VGGTOmegaWrapper(torch.nn.Module):
         )
 
         images = torch.stack([view["img"] for view in views], dim=1)
-        predictions = self.model(images)
+
+        with torch.autocast(get_autocast_device_type(self.device), dtype=self.dtype):
+            predictions = self.model(images)
+
         return self._format_predictions(
             predictions,
             image_shape=images.shape[-2:],

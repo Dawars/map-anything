@@ -13,6 +13,7 @@ from mapanything.models.external.vggt.models.vggt import VGGT
 from mapanything.models.external.vggt.utils.geometry import closed_form_inverse_se3
 from mapanything.models.external.vggt.utils.pose_enc import pose_encoding_to_extri_intri
 from mapanything.models.external.vggt.utils.rotation import mat_to_quat
+from mapanything.utils.device import get_device, get_amp_dtype, get_autocast_device_type
 from mapanything.utils.geometry import (
     convert_ray_dirs_depth_along_ray_pose_trans_quats_to_pointmap,
     convert_z_depth_to_depth_along_ray,
@@ -63,11 +64,11 @@ class VGGTWrapper(torch.nn.Module):
 
         # Get the dtype for VGGT inference
         # bfloat16 is supported on Ampere GPUs (Compute Capability 8.0+)
-        self.dtype = (
-            torch.bfloat16
-            if torch.cuda.get_device_capability()[0] >= 8
-            else torch.float16
-        )
+
+        self.device = get_device()
+        # Get the dtype for Pi3 inference
+        # bfloat16 is supported on Ampere GPUs (Compute Capability 8.0+)
+        self.dtype = get_amp_dtype(self.device)
 
         # Load custom checkpoint if requested
         if self.load_custom_ckpt:
@@ -111,11 +112,11 @@ class VGGTWrapper(torch.nn.Module):
         images = torch.stack(img_list, dim=1)
 
         # Run the VGGT aggregator
-        with torch.autocast("cuda", dtype=self.dtype):
+        with torch.autocast(get_autocast_device_type(self.device), dtype=self.dtype):
             aggregated_tokens_list, ps_idx = self.model.aggregator(images)
 
         # Run the Camera + Pose Branch of VGGT
-        with torch.autocast("cuda", enabled=False):
+        with torch.autocast(get_autocast_device_type(self.device), enabled=False):
             # Predict Cameras
             pose_enc = self.model.camera_head(aggregated_tokens_list)[-1]
             # Extrinsic and intrinsic matrices, following OpenCV convention (camera from world)
