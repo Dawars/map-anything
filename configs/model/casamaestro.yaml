@@ -1,0 +1,22 @@
+defaults:
+  - default
+  - task: images_only
+
+# String for model factory
+model_str: "casamaestro"
+# Model config
+model_config:
+  name: "casamaestro"
+  # Checkpoint path (released as CasaMeastro_with_mask.pt on Hugging Face:
+  # https://huggingface.co/AutoLab-SJTU/CasaMeastro)
+  ckpt_path: "${root_pretrained_checkpoints_dir}/CasaMeastro_with_mask.pt"
+  # Packaged Depth Anything 3 config defining the backbone & depth head
+  da3_config: "depth_anything_3.configs.da3-large"
+  # Use the CasaMaestro panoramic camera decoder (cross-view attention pose head)
+  use_pano_cam_dec: True
+# Image Normalization Type
+data_norm_type: "dinov2"
+# CasaMaestro checkpoint is already loaded in the inference wrapper
+pretrained: null
+# Torch hub force reload
+torch_hub_force_reload: False

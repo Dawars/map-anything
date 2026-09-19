@@ -157,6 +157,10 @@ MODEL_CONFIGS = {
         "module": "mapanything.models.external.anycalib",
         "class_name": "AnyCalibWrapper",
     },
+    "casamaestro": {
+        "module": "mapanything.models.external.casamaestro",
+        "class_name": "CasaMaestroWrapper",
+    },
     "da3": {
         "module": "mapanything.models.external.da3",
         "class_name": "DA3Wrapper",
