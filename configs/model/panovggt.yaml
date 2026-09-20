@@ -1,0 +1,20 @@
+defaults:
+  - default
+  - task: images_only
+
+# String for model factory
+model_str: "panovggt"
+# Model config
+model_config:
+  name: "panovggt"
+  # Checkpoint path (released as model.pt at
+  # https://huggingface.co/YijingGuo/PanoVGGT)
+  ckpt_path: "${root_pretrained_checkpoints_dir}/panovggt_weight.pt"
+# Image Normalization Type
+# PanoVGGT applies the ImageNet mean/std inside its own aggregator, so the input must be
+# left un-normalized
+data_norm_type: "identity"
+# PanoVGGT checkpoint is already loaded in the inference wrapper
+pretrained: null
+# Torch hub force reload
+torch_hub_force_reload: False

@@ -181,6 +181,10 @@ MODEL_CONFIGS = {
         "module": "mapanything.models.external.must3r",
         "class_name": "MUSt3RWrapper",
     },
+    "panovggt": {
+        "module": "mapanything.models.external.panovggt",
+        "class_name": "PanoVGGTWrapper",
+    },
     "pi3": {
         "module": "mapanything.models.external.pi3",
         "class_name": "Pi3Wrapper",
