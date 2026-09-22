@@ -1,0 +1,70 @@
+# String for model factory
+model_str: "horizonstream"
+# Model config
+model_config:
+  name: "horizonstream"
+  # Load pre-trained weights (auto-downloaded from HuggingFace Hub if no local checkpoint is given)
+  load_pretrained_weights: true
+  # Local checkpoint path (takes precedence over hf_repo_id/hf_filename when set)
+  checkpoint: null
+  # HuggingFace Hub source for the released checkpoint
+  hf_repo_id: "NicolasCC/HorizonStream"
+  hf_filename: "HorizonStream.pt"
+  hf_local_dir: "checkpoints"
+  strict_load: true
+  # HorizonStream model architecture config (agg_regator_cfg, cam_decoder_cfg,
+  # dpt_decoder_cfg, etc.) - must match the checkpoint being loaded. Values below
+  # mirror horizon-stream/configs/horizonstream_infer.yaml for the released
+  # "NicolasCC/HorizonStream" checkpoint.
+  horizonstream_cfg:
+    load_pretrained: false
+    use_xyz_head: false
+    enable_metric_readout_token: true
+    frames_chunk_size: 1
+    use_chunkwise_checkpoint: true
+
+    agg_regator_cfg:
+      patch_embed: dinov2_vitl14_reg
+      img_size: 518
+      patch_size: 14
+      embed_dim: 1024
+      intermediate_layer_idx: [4, 11, 17, 23]
+      num_heads: 16
+      depth: 24
+      gate_attn: headwise
+      rope_type: 3d
+      rope_temporal_period: 21
+      fuse_grm_priori: false
+      num_pose_tokens: 32
+      use_register_token: false
+      chunk_block_num: 3
+      global_attn_arch: gla
+      global_attn_impl: softmax
+      gla_expand_v: 1.0
+      gla_use_short_conv: true
+      gla_conv_size: 4
+      gla_conv_bias: false
+      gla_allow_neg_eigval: false
+      gla_norm_eps: 1.0e-5
+      gla_serial_layers: [4, 11, 17, 23]
+
+    cam_decoder_cfg:
+      pose_encoding_type: absT_quaR_FoV
+      dim_in: 2048
+
+    metric_readout_head_cfg:
+      hidden_dims: [256, 128]
+      init_bias: 0.0
+
+    dpt_decoder_cfg:
+      dim_in: 2048
+      output_dim: 2
+      activation: exp
+      conf_activation: expp1
+      intermediate_layer_idx: [4, 11, 17, 23]
+# Image Normalization Type
+data_norm_type: "identity"
+# HorizonStream checkpoint is already loaded in the inference wrapper
+pretrained: null
+# Torch hub force reload
+torch_hub_force_reload: false

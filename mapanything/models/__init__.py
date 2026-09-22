@@ -169,6 +169,10 @@ MODEL_CONFIGS = {
         "module": "mapanything.models.external.dust3r",
         "class_name": "DUSt3RBAWrapper",
     },
+    "horizonstream": {
+        "module": "mapanything.models.external.horizonstream",
+        "class_name": "HorizonStreamWrapper",
+    },
     "mast3r": {
         "module": "mapanything.models.external.mast3r",
         "class_name": "MASt3RSGAWrapper",
