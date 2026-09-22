@@ -219,6 +219,7 @@ MODEL_CONFIG = {
     "da3_nested": {"resolution": 504, "norm_type": "dinov2", "patch_size": 14},
     "moge_1": {"resolution": 518, "norm_type": "identity", "patch_size": 14},
     "moge_2": {"resolution": 518, "norm_type": "identity", "patch_size": 14},
+    "horizonstream": {"resolution": 518, "norm_type": "identity", "patch_size": 14},
 }
 
 
