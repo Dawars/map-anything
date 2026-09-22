@@ -14,13 +14,18 @@ model_config:
   strict_load: true
   # Streaming-window controls: HorizonStream processes views in bounded windows
   # with KV-cache carry-over rather than attending over all views at once (its
-  # first-chunk attention mask cost is O(window_size^2)). Defaults match
-  # horizon-stream/configs/horizonstream_infer.yaml. Lower window_size (e.g. 6-8)
-  # to trade a little accuracy/speed for less peak VRAM; set offload_outputs_to_cpu
-  # to true for very long sequences.
-  window_size: 10
-  sliding_size: 21
+  # first-chunk attention mask cost is O(window_size^2)). horizon-stream's own
+  # released defaults (window_size=10, sliding_size=21) use ~30GB VRAM; raised
+  # here for extra trajectory context on high-VRAM GPUs. Lower these (e.g. back
+  # to 10/21, or further) to trade accuracy/speed for less peak VRAM; set
+  # offload_outputs_to_cpu to true for very long sequences.
+  window_size: 24
+  sliding_size: 48
   offload_outputs_to_cpu: false
+  # Also compute the offline (global, non-causal) motion-averaged trajectory and
+  # use it as the final camera poses instead of the online (causal) one. Falls
+  # back to the online trajectory with a warning if offline averaging errors out.
+  enable_offline_motion_averaging: true
   # HorizonStream model architecture config (agg_regator_cfg, cam_decoder_cfg,
   # dpt_decoder_cfg, etc.) - must match the checkpoint being loaded. Values below
   # mirror horizon-stream/configs/horizonstream_infer.yaml for the released

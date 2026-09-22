@@ -180,13 +180,18 @@ class HorizonStreamWrapper(torch.nn.Module):
         hf_local_dir="checkpoints",
         strict_load=True,
         horizonstream_cfg=None,
-        # Streaming-window controls (see module docstring). Defaults match
-        # horizon-stream/configs/horizonstream_infer.yaml, the released
-        # checkpoint's own recommended inference settings. Lower these (e.g.
-        # window_size=6-8) to trade a little accuracy/speed for less peak VRAM.
-        window_size=10,
-        sliding_size=21,
+        # Streaming-window controls (see module docstring). horizon-stream's own
+        # released defaults (window_size=10, sliding_size=21) use ~30GB VRAM;
+        # raised here for extra trajectory context on high-VRAM GPUs. Lower these
+        # (e.g. back to 10/21, or further) to trade accuracy/speed for less peak VRAM.
+        window_size=24,
+        sliding_size=48,
         offload_outputs_to_cpu=False,
+        # Whether to additionally compute HorizonStream's offline (global,
+        # non-causal) motion-averaged trajectory and use it as the final camera
+        # poses instead of the online (causal) one. Falls back to the online
+        # trajectory with a warning if offline averaging errors out.
+        enable_offline_motion_averaging=True,
     ):
         super().__init__()
         _ensure_horizonstream_importable()
@@ -223,6 +228,7 @@ class HorizonStreamWrapper(torch.nn.Module):
         self.window_size = int(window_size)
         self.sliding_size = int(sliding_size)
         self.offload_outputs_to_cpu = bool(offload_outputs_to_cpu)
+        self.enable_offline_motion_averaging = bool(enable_offline_motion_averaging)
 
         self.device = get_device()
         # bfloat16 is supported on Ampere GPUs (Compute Capability 8.0+)
@@ -323,9 +329,19 @@ class HorizonStreamWrapper(torch.nn.Module):
             frames_num=num_views,
             window_size=self.window_size,
             dtype=torch.float32,
-            enable_offline=False,
+            enable_offline=self.enable_offline_motion_averaging,
         )
-        pose_enc = motion_maps["online_cam_map"].to(device=self.device, dtype=torch.float32)
+        offline_cam_map = motion_maps.get("offline_cam_map")
+        if self.enable_offline_motion_averaging and offline_cam_map is None:
+            print(
+                "[HorizonStreamWrapper] offline motion averaging failed "
+                f"({motion_maps.get('offline_cam_map_error', 'unknown reason')}); "
+                "falling back to the online trajectory."
+            )
+        final_cam_map = (
+            offline_cam_map if offline_cam_map is not None else motion_maps["online_cam_map"]
+        )
+        pose_enc = final_cam_map.to(device=self.device, dtype=torch.float32)
         extrinsic, intrinsic = pose_encoding_to_extri_intri(pose_enc, (height, width))
 
         depth = torch.stack(global_depth, dim=1).to(self.device)  # (B, V, H, W, 1)
