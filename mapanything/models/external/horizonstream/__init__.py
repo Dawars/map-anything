@@ -132,8 +132,13 @@ def _forward_chunk_high_precision(hs, images, *, window_size, chunk_idx, state, 
         )
 
     with torch.autocast(device_type, enabled=False):
+        # `_output_dict_to_list` returns a list indexed by absolute layer number,
+        # padded with `None` at layers that aren't required by the DPT head /
+        # metric-scale readout (only specific intermediate_layer_idx positions
+        # are populated) - only cast the populated entries.
         aggregated_tokens_list = [
-            tok.float() for tok in hs._output_dict_to_list(output_dict)
+            tok.float() if tok is not None else None
+            for tok in hs._output_dict_to_list(output_dict)
         ]
         chunk_cam_maps_raw = hs.cam_decoder(win_pose_tokens.float(), chunk_idx=chunk_idx)
 
