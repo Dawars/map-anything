@@ -153,6 +153,10 @@ MODEL_CONFIGS = {
         "class": ModularDUSt3R,
     },
     # External models
+    "anchor3r": {
+        "module": "mapanything.models.external.anchor3r",
+        "class_name": "Anchor3RWrapper",
+    },
     "anycalib": {
         "module": "mapanything.models.external.anycalib",
         "class_name": "AnyCalibWrapper",

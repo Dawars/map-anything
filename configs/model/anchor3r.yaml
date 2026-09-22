@@ -1,0 +1,62 @@
+# String for model factory
+model_str: "anchor3r"
+# Model config
+model_config:
+  name: "anchor3r"
+  # Load pre-trained weights (auto-downloaded from HuggingFace Hub if no local checkpoint is given)
+  load_pretrained_weights: true
+  # Local checkpoint path (takes precedence over the HuggingFace Hub source when set)
+  checkpoint: null
+  # HuggingFace Hub source for the released checkpoint (see Anchor3R/checkpoints/release.json)
+  hf_repo_id: "polar-explorer/Anchor3R"
+  hf_filename: "Anchor3R.pt"
+  hf_revision: "aae563ce2831699554b5f83bf1c5e31775959d49"
+  hf_local_dir: "checkpoints"
+  strict_load: true
+  # Streaming-window controls: Anchor3R processes views in bounded windows with
+  # KV-cache carry-over rather than attending over all views at once. Defaults
+  # match Anchor3R/anchor3r/configs/infer.yaml, the released checkpoint's own
+  # recommended inference settings.
+  window_size: 10
+  chunk_size: 64
+  offload_outputs_to_cpu: false
+  # "offline" runs Anchor3R's sparse least-squares pose-graph averaging over all
+  # overlapping window estimates (requires scikit-sparse/CHOLMOD, and is the
+  # better fit for a completed batch reconstruction); "online" is the causal,
+  # real-time-compatible trajectory that Anchor3R's own reference config
+  # defaults to.
+  mode: "offline"
+  # Anchor3R model architecture config - must match the checkpoint being
+  # loaded. Values below mirror Anchor3R/anchor3r/configs/infer.yaml for the
+  # released "polar-explorer/Anchor3R" checkpoint.
+  sampler_cfg:
+    stream_aggregator_cfg:
+      img_size: 518
+      patch_size: 14
+      embed_dim: 1024
+      intermediate_layer_idx: [4, 11, 17, 23]
+      num_heads: 16
+      depth: 24
+      num_pose_tokens: 16
+      pose_attn_depth: 4
+      pose_window_attn_layer_idx: [2, 5, 8, 11, 14, 17, 20, 23]
+      gate_attn: true
+
+    cam_decoder_cfg:
+      pose_encoding_type: absT_quaR
+
+    fov_head_cfg:
+      hidden_dims: [512, 128]
+      init_bias: 0.0
+
+    dpt_decoder_cfg:
+      output_dim: 2
+      use_conf: true
+      activation: exp
+      conf_activation: expp1
+# Image Normalization Type
+data_norm_type: "identity"
+# Anchor3R checkpoint is already loaded in the inference wrapper
+pretrained: null
+# Torch hub force reload
+torch_hub_force_reload: false
