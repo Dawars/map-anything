@@ -12,6 +12,15 @@ model_config:
   hf_filename: "HorizonStream.pt"
   hf_local_dir: "checkpoints"
   strict_load: true
+  # Streaming-window controls: HorizonStream processes views in bounded windows
+  # with KV-cache carry-over rather than attending over all views at once (its
+  # first-chunk attention mask cost is O(window_size^2)). Defaults match
+  # horizon-stream/configs/horizonstream_infer.yaml. Lower window_size (e.g. 6-8)
+  # to trade a little accuracy/speed for less peak VRAM; set offload_outputs_to_cpu
+  # to true for very long sequences.
+  window_size: 10
+  sliding_size: 21
+  offload_outputs_to_cpu: false
   # HorizonStream model architecture config (agg_regator_cfg, cam_decoder_cfg,
   # dpt_decoder_cfg, etc.) - must match the checkpoint being loaded. Values below
   # mirror horizon-stream/configs/horizonstream_infer.yaml for the released
