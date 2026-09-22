@@ -220,6 +220,7 @@ MODEL_CONFIG = {
     "moge_1": {"resolution": 518, "norm_type": "identity", "patch_size": 14},
     "moge_2": {"resolution": 518, "norm_type": "identity", "patch_size": 14},
     "horizonstream": {"resolution": 518, "norm_type": "identity", "patch_size": 14},
+    "anchor3r": {"resolution": 518, "norm_type": "identity", "patch_size": 14},
 }
 
 
